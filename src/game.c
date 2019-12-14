@@ -1,9 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "board.h"
 
-int main(int argc, char **argv)
+int main()
 {
-    printf("Hello world !\n");
     
-    return 0;
+
+    Board *board = init_game();
+
+    print_board(board);
+
+    return EXIT_SUCCESS;
 }
