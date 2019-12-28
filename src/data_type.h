@@ -45,7 +45,4 @@ String *string_init_with(const char *);
 
 void string_check_alloc(String *);
 
-Coordinate *init_coordinate(size_t, size_t);
-
-
 #endif

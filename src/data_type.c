@@ -79,9 +79,3 @@ void string_check_alloc(String *string)
         }
     }
 }
-
-
-Coordinate *init_coordinate(size_t x, size_t y)
-{
-
-}
