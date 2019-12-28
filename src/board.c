@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 #include "board.h"
 
@@ -71,9 +72,9 @@ Vector *init_pawns(size_t rows, size_t columns)
         {
             if (i < ((rows / 2) - 1) || i > (rows / 2))
             {
-                int color = (i < ((rows / 2) - 1)) ? WHITE : BLACK;
+                int color = (i < ((rows / 2) - 1)) ? BLACK : WHITE;
 
-                if (((j % 2 == 0) && (i % 2 == 0)) || ((j % 2 == 1) && (i % 2 == 1)))
+                if (((j % 2 == 1) && (i % 2 == 0)) || ((j % 2 == 0) && (i % 2 == 1)))
                 {
                     Pawn *pawn = init_pawn(color, i, j);
                     vector_push_ref(line, pawn);
@@ -147,7 +148,8 @@ Board *init_board()
     Board *board = malloc(sizeof(Board));
     *board = (Board){
         .rows = rows,
-        .columns = columns};
+        .columns = columns,
+        .nb_rounds = 0};
 
     return board;
 }
@@ -181,4 +183,136 @@ Board *init_game()
     board->pawns = init_pawns(board->rows, board->columns);
 
     return board;
+}
+
+int is_valid_move(Board *board, Coordinate *src, Coordinate *dest)
+{
+    Vector *position_1 = (Vector *)board->pawns->items[src->y];
+    
+    if (position_1->items[src->x] == NULL)
+    {
+        return 0;
+    }
+    
+    int direction = (board->nb_rounds % 2 == 0) ? -1 : 1;
+
+    if (dest->y != src->y + direction)
+    {
+        return 0;
+    }
+
+    if ((dest->x != (src->x + 1)) && (dest->x != (src->x - 1)))
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+void move_pawn(Board *board)
+{
+    Coordinate *start, *dest;
+    int valid = 0;
+    do
+    {
+        start = select_pawn(board);
+        dest = select_pawn(board);
+        valid = is_valid_move(board, start, dest);
+
+        if (!valid)
+        {
+            fprintf(stderr, "\nThe move is not valid. Try again.\n\n");
+        }
+
+    } while (!valid);
+
+    swap_pawns(board->pawns, start, dest);
+}
+
+void swap_pawns(Vector *pawns, Coordinate *src, Coordinate *dest)
+{
+    Vector *s = (Vector *)pawns->items[src->y];
+    Vector *d = (Vector *)pawns->items[dest->y];
+    void *temp = d->items[dest->x];
+    d->items[dest->x] = s->items[src->x];
+    s->items[src->x] = temp;
+}
+
+Coordinate *select_pawn(Board *board)
+{
+    char input[10];
+    Coordinate *pawn = NULL;
+    do
+    {
+        printf("Enter coordinate: ");
+        scanf("%s", input);
+
+        pawn = parse_entry_move(input, board->rows, board->columns);
+        if (pawn == NULL)
+        {
+            fprintf(stderr, "\nPosition not valid. Try again.\n\n");
+        }
+    }  while (pawn == NULL);
+
+    return pawn;
+}
+
+Coordinate *parse_entry_move(const char *move, size_t rows, size_t columns)
+{
+    size_t size = strlen(move);
+    if (size < 2)
+    {
+        return NULL;
+    }
+
+    if (is_letter(move[0]))
+    {
+        Coordinate *coord = malloc(sizeof(Coordinate));
+        coord->x = is_upper_case(move[0]) ? move[0] - 'A' : move[0] - 'a';
+
+        char *number = calloc(sizeof(char), size);
+        size--;
+        strncpy(number, move + 1, size);
+
+        int temp = int_val(number);
+        free(number);
+
+        coord->y = rows - temp;
+
+        return (coord->y < rows && coord->x < columns) ? coord : NULL;
+    }
+
+    return NULL;
+}
+
+int is_letter(char c)
+{
+    return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
+}
+
+int is_upper_case(char c)
+{
+    return (c >= 'A' && c <= 'Z');
+}
+
+int int_val(const char *str)
+{
+    size_t size = strlen(str);
+    size_t number = 0;
+
+    for (size_t i = 0; i < size; i++)
+    {
+        if (isdigit(str[i]))
+        {
+            number *= 10;
+            number += str[i] - '0';
+        }
+        else
+        {
+            printf("not a number!\n");
+            return -1;
+        }
+    }
+
+    return number;
 }

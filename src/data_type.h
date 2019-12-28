@@ -7,6 +7,13 @@
 
 typedef struct string_t String;
 typedef struct vector_t Vector;
+typedef struct coordinate_t Coordinate;
+
+struct coordinate_t
+{
+    size_t x;
+    size_t y;
+};
 
 struct string_t
 {
@@ -37,6 +44,5 @@ String *string_init_alloc(size_t);
 String *string_init_with(const char *);
 
 void string_check_alloc(String *);
-
 
 #endif
